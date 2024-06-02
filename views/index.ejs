@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Stock</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            text-align: center;
+            background-color: #007BFF;
+            color: white;
+            padding: 20px;
+            margin: 0;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+            animation: fadeIn 1s ease-in-out;
+        }
+        li {
+            background: white;
+            margin: 10px 0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 1s ease-in-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+        li:nth-child(odd) {
+            background: #f9f9f9;
+        }
+        li a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-left: 10px;
+            padding: 8px 12px;
+            border: 1px solid #007BFF;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+        }
+        li a:hover {
+            background: #007BFF;
+            color: white;
+        }
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .product-info span {
+            margin: 2px 0;
+        }
+        a.add-product {
+            display: block;
+            text-align: center;
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            margin: 20px auto;
+            width: 250px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+            animation: fadeIn 1s ease-in-out;
+        }
+        a.add-product:hover {
+            background: #218838;
+        }
+        /* Styles pour le pop-up de confirmation */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+            padding-top: 60px; 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 400px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal .confirm {
+            background-color: #28a745;
+            color: white;
+        }
+        .modal .cancel {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Liste des produits</h1>
+    <ul>
+        <% produits.forEach(produit => { %>
+        <li>
+            <div class="product-info">
+                <span><strong>Nom:</strong> <%= produit.nom %></span>
+                <span><strong>Catégorie:</strong> <%= produit.categorie %></span>
+                <span><strong>Quantité:</strong> <%= produit.quantite %></span>
+                <span><strong>Prix:</strong> <%= produit.prix %></span>
+            </div>
+            <div>
+                <a href="/edit-produit/<%= produit.id %>">Modifier</a>
+                <a href="#" class="delete-link" data-id="<%= produit.id %>">Supprimer</a>
+            </div>
+        </li>
+        <% }) %>
+    </ul>
+    <a href="/add-produit" class="add-product">Ajouter un nouveau produit</a>
+
+    <!-- Pop-up de confirmation -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Êtes-vous sûr de vouloir supprimer ce produit?</p>
+            <button class="confirm">Oui</button>
+            <button class="cancel">Non</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('myModal');
+            const span = document.getElementsByClassName('close')[0];
+            const confirmBtn = document.querySelector('.confirm');
+            const cancelBtn = document.querySelector('.cancel');
+            let deleteLink = null;
+
+            document.querySelectorAll('.delete-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    deleteLink = e.currentTarget;
+                    modal.style.display = 'block';
+                });
+            });
+
+            span.onclick = () => {
+                modal.style.display = 'none';
+            }
+
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+            }
+
+            confirmBtn.onclick = () => {
+                if (deleteLink) {
+                    window.location.href = `/delete-produit/${deleteLink.dataset.id}`;
+                }
+            }
+
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
